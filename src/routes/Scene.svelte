@@ -6,38 +6,34 @@
 	import FloatingPyramid from './FloatingPyramid.svelte';
 	import { EdgesGeometry, BoxGeometry } from 'three';
 	import { CUBE_SIZE } from '$lib/constants';
-	import type { PyramidState, PyramidStates } from '$lib/types';
-	import { mockDataService } from '$lib/mockDataService';
-	import { onMount } from 'svelte';
+	import type { PyramidState } from '$lib/types';
+	import { normalizePyramidState } from '$lib/utils';
 
 	// Box geometry setup
 	let boxGeometry = $state(new BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
 	let edgesGeometry = $state(new EdgesGeometry(boxGeometry));
 
-	// Pyramid states management
-	let pyramidStates = $state<PyramidStates>({});
+	let { currentView = 'MAIN', pyramidStates = [] } = $props<{
+		currentView: string;
+		pyramidStates: PyramidState[];
+	}>();
 
-	// Function to update pyramid states
-	function updatePyramidStates(newStates: PyramidState[]) {
-		newStates.forEach((state) => {
-			pyramidStates[state.id] = state;
-		});
-	}
-
-	// Start mock data service
-	onMount(() => {
-		const unsubscribe = mockDataService.subscribe(updatePyramidStates);
-		mockDataService.start();
-		return () => {
-			mockDataService.stop();
-			unsubscribe();
-		};
-	});
-
+	// Normalize pyramid states
+	let pyramids = $derived(pyramidStates.map(normalizePyramidState));
 	$effect(() => {
 		edgesGeometry = new EdgesGeometry(boxGeometry);
 	});
+
+	// Reusable pyramid component snippet
 </script>
+
+{#snippet pyramid(pyramid: PyramidState)}
+	<FloatingPyramid
+		position={[pyramid.position.x, pyramid.position.y, pyramid.position.z]}
+		rotation={[pyramid.rotation.x, pyramid.rotation.y, pyramid.rotation.z]}
+		color={pyramid.color}
+	/>
+{/snippet}
 
 <svelte:window
 	on:resize={() => {
@@ -46,17 +42,13 @@
 />
 
 <Lights />
-<Camera />
+<Camera {currentView} {pyramidStates} />
 
 <T.LineSegments position={[0, 0, 0]}>
 	<T.BufferGeometry attributes={{ position: edgesGeometry.attributes.position }} />
 	<T.LineBasicMaterial color="#ffffff" linewidth={2} />
 </T.LineSegments>
 
-{#each Object.values(pyramidStates) as pyramid (pyramid.id)}
-	<FloatingPyramid
-		position={[pyramid.position.x, pyramid.position.y, pyramid.position.z]}
-		rotation={[pyramid.rotation.x, pyramid.rotation.y, pyramid.rotation.z]}
-		color={pyramid.color}
-	/>
+{#each pyramids as ship (ship.id)}
+	{@render pyramid(ship)}
 {/each}
