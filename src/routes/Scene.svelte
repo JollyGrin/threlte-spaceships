@@ -2,7 +2,14 @@
 	import { T } from '@threlte/core';
 	import Camera from './Camera.svelte';
 	import Lights from './Lights.svelte';
-	import { WireframeGeometry, BoxGeometry } from 'three';
+	import { EdgesGeometry, BoxGeometry } from 'three';
+
+	let boxGeometry = new BoxGeometry(1, 1, 1);
+	let edgesGeometry = new EdgesGeometry(boxGeometry);
+
+	$effect(() => {
+		edgesGeometry = new EdgesGeometry(boxGeometry);
+	});
 </script>
 
 <svelte:window
@@ -18,7 +25,7 @@
 
 {#snippet cube(props)}
 	<T.LineSegments {...props}>
-		<T.WireframeGeometry args={[new BoxGeometry(1, 1, 1)]} />
+		<T.BufferGeometry attributes={{position: edgesGeometry.attributes.position}} />
 		<T.LineBasicMaterial color="#ffffff" linewidth={2} />
 	</T.LineSegments>
 {/snippet}
