@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Cube from '$lib/components/Cube.svelte';
+	import { T } from '@threlte/core';
 	import Camera from './Camera.svelte';
 	import Lights from './Lights.svelte';
+	import { WireframeGeometry, BoxGeometry } from 'three';
 </script>
 
 <svelte:window
@@ -15,4 +16,11 @@
 <Lights />
 <Camera />
 
-<Cube position={[0, 0, 0]} />
+{#snippet cube(props)}
+	<T.LineSegments {...props}>
+		<T.WireframeGeometry args={[new BoxGeometry(1, 1, 1)]} />
+		<T.LineBasicMaterial color="#ffffff" linewidth={2} />
+	</T.LineSegments>
+{/snippet}
+
+{@render cube({ position: [0, 0, 0] })}

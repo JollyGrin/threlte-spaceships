@@ -267,24 +267,6 @@ Directory structure:
                 └── vatroslav.mdx
 
 ================================================
-File: apps/docs/src/content/authors/Grischa Erbe.mdx
-================================================
----
-name: Grischa Erbe
-url: https://github.com/grischaerbe
----
-
-
-================================================
-File: apps/docs/src/content/authors/Threlte Team.mdx
-================================================
----
-name: Threlte Team
-url: https://threlte.xyz
----
-
-
-================================================
 File: apps/docs/src/content/blog/Threlte 8.mdx
 ================================================
 ---
