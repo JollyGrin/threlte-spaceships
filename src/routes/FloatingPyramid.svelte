@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T } from '@threlte/core';
-	import type { EulerOrder, Vector3Tuple } from 'three';
+	import type { Vector3Tuple } from 'three';
 	import { ConeGeometry, EdgesGeometry, Vector3, Euler } from 'three';
 	import { PYRAMID, getDerivedValues } from '$lib/constants';
 
