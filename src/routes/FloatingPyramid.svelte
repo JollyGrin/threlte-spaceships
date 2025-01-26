@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T } from '@threlte/core';
-	import type { Vector3Tuple } from 'three';
-	import { ConeGeometry, EdgesGeometry } from 'three';
+	import type { EulerOrder, Vector3Tuple } from 'three';
+	import { ConeGeometry, EdgesGeometry, Vector3, Euler } from 'three';
 	import { PYRAMID, getDerivedValues } from '$lib/constants';
 
 	let {
@@ -16,20 +16,41 @@
 
 	let time = $state(0);
 	let velocity = $state({
-		x: Math.sin(phase) * speed * 0.005,
-		y: Math.cos(phase) * speed * 0.005,
-		z: Math.sin(phase + Math.PI/4) * speed * 0.005
+		x: Math.sin(phase) * speed * 0.002,
+		y: Math.cos(phase) * speed * 0.002,
+		z: Math.sin(phase + Math.PI / 4) * speed * 0.002
 	});
 
 	// Get the derived values for movement bounds
 	const { MOVEMENT_BOUNDS } = getDerivedValues();
 
-	const pyramidGeometry = new ConeGeometry(
-		PYRAMID.BASE_RADIUS,
-		PYRAMID.HEIGHT,
-		4
-	);
+	const pyramidGeometry = new ConeGeometry(PYRAMID.BASE_RADIUS, PYRAMID.HEIGHT, 4, 1, false);
 	const edgesGeometry = new EdgesGeometry(pyramidGeometry);
+
+	// Calculate rotation to face movement direction
+	function calculateRotation(velocity: { x: number; y: number; z: number }): Euler {
+		// Create a direction vector from velocity
+		const direction = new Vector3(velocity.x, velocity.y, velocity.z).normalize();
+
+		// Only calculate rotation if we have movement
+		if (direction.length() === 0) {
+			return new Euler(0, 0, 0);
+		}
+
+		const euler = new Euler();
+
+		// Calculate angle around Y axis (yaw)
+		euler.y = Math.atan2(direction.x, direction.z);
+		// Calculate angle around X axis (pitch)
+		euler.x = -Math.atan2(
+			direction.y,
+			Math.sqrt(direction.x * direction.x + direction.z * direction.z)
+		);
+
+		return euler;
+	}
+
+	let rotation = $state(calculateRotation(velocity));
 
 	// Create a floating animation with bouncing
 	$effect(() => {
@@ -56,6 +77,9 @@
 				z = Math.sign(z) * MOVEMENT_BOUNDS;
 			}
 
+			// Update rotation to face movement direction
+			rotation = calculateRotation(velocity);
+
 			position = [x, y, z];
 		}, 16);
 
@@ -65,7 +89,7 @@
 
 <T.Group>
 	<!-- Wireframe pyramid -->
-	<T.LineSegments {position} rotation.y={time * speed * 0.5}>
+	<T.LineSegments {position} rotation={[rotation.x, rotation.y, rotation.z]}>
 		<T.BufferGeometry attributes={{ position: edgesGeometry.attributes.position }} />
 		<T.LineBasicMaterial color="#00ff88" linewidth={2} />
 	</T.LineSegments>
