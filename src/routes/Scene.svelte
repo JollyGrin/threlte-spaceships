@@ -7,36 +7,15 @@
 	import { EdgesGeometry, BoxGeometry } from 'three';
 	import { CUBE_SIZE } from '$lib/constants';
 	import type { PyramidState, PyramidStates } from '$lib/types';
+	import { mockDataService } from '$lib/mockDataService';
+	import { onMount } from 'svelte';
 
 	// Box geometry setup
 	let boxGeometry = $state(new BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
 	let edgesGeometry = $state(new EdgesGeometry(boxGeometry));
 
 	// Pyramid states management
-	let pyramidStates = $state<PyramidStates>({
-		// Initial mock data
-		pyramid1: {
-			id: 'pyramid1',
-			position: { x: 0.2, y: 0.2, z: 0 },
-			rotation: { x: 0, y: 0, z: 0 },
-			velocity: { x: 0, y: 0, z: 0 },
-			color: '#00ff88'
-		},
-		pyramid2: {
-			id: 'pyramid2',
-			position: { x: -0.2, y: -0.2, z: 0.2 },
-			rotation: { x: 0, y: 0, z: 0 },
-			velocity: { x: 0, y: 0, z: 0 },
-			color: '#00ff88'
-		},
-		pyramid3: {
-			id: 'pyramid3',
-			position: { x: 0, y: 0.2, z: -0.2 },
-			rotation: { x: 0, y: 0, z: 0 },
-			velocity: { x: 0, y: 0, z: 0 },
-			color: '#00ff88'
-		}
-	});
+	let pyramidStates = $state<PyramidStates>({});
 
 	// Function to update pyramid states
 	function updatePyramidStates(newStates: PyramidState[]) {
@@ -44,6 +23,16 @@
 			pyramidStates[state.id] = state;
 		});
 	}
+
+	// Start mock data service
+	onMount(() => {
+		const unsubscribe = mockDataService.subscribe(updatePyramidStates);
+		mockDataService.start();
+		return () => {
+			mockDataService.stop();
+			unsubscribe();
+		};
+	});
 
 	$effect(() => {
 		edgesGeometry = new EdgesGeometry(boxGeometry);
