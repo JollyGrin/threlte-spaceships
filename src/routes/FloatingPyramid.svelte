@@ -4,7 +4,7 @@
 	import { ConeGeometry, EdgesGeometry } from 'three';
 	import { PYRAMID } from '$lib/constants';
 
-	let { 
+	let {
 		position = [0, 0, 0],
 		rotation = [0, 0, 0],
 		color = '#00ff88'
@@ -19,8 +19,7 @@
 </script>
 
 <T.Group>
-	<!-- Wireframe pyramid -->
-	<T.LineSegments {position} rotation={rotation}>
+	<T.LineSegments {position} {rotation}>
 		<T.BufferGeometry attributes={{ position: edgesGeometry.attributes.position }} />
 		<T.LineBasicMaterial {color} linewidth={2} />
 	</T.LineSegments>

@@ -10,17 +10,17 @@
 		currentView: string;
 		onViewChange: (view: string) => void;
 	}>();
-
-	{#snippet viewButton(view: string, color?: string)}
-		<button
-			class="rounded-lg bg-black/50 px-4 py-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-			onclick={() => onViewChange(view)}
-			style:--pyramid-color={color ?? 'white'}
-		>
-			{view === 'MAIN' ? 'Main View' : `Pyramid ${view}`}
-		</button>
-	{/snippet}
 </script>
+
+{#snippet viewButton(view: string, color?: string)}
+	<button
+		class="rounded-lg bg-black/50 px-4 py-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+		onclick={() => onViewChange(view)}
+		style:--pyramid-color={color ?? 'white'}
+	>
+		{view === 'MAIN' ? 'Main View' : `Pyramid ${view}`}
+	</button>
+{/snippet}
 
 <div class="fixed left-4 top-4 z-50 flex flex-col gap-2">
 	{@render viewButton('MAIN')}
