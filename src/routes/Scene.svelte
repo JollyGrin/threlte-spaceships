@@ -5,22 +5,35 @@
 	import Lights from './Lights.svelte';
 	import FloatingPyramid from './FloatingPyramid.svelte';
 	import { EdgesGeometry, BoxGeometry } from 'three';
-	import { CUBE_SIZE, getDerivedValues } from '$lib/constants';
+	import { CUBE_SIZE } from '$lib/constants';
+	import type { PyramidState } from '$lib/types';
+	import { normalizePyramidState } from '$lib/utils';
 
+	// Box geometry setup
 	let boxGeometry = $state(new BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
 	let edgesGeometry = $state(new EdgesGeometry(boxGeometry));
 
-	// Get derived values for spawning pyramids
-	const { SPAWN_BOUNDS } = getDerivedValues();
+	let { currentView = 'MAIN', pyramidStates = [] } = $props<{
+		currentView: string;
+		pyramidStates: PyramidState[];
+	}>();
 
-	type CubeProps = {
-		position: Vector3Tuple;
-	};
-
+	// Normalize pyramid states
+	let pyramids = $derived(pyramidStates.map(normalizePyramidState));
 	$effect(() => {
 		edgesGeometry = new EdgesGeometry(boxGeometry);
 	});
+
+	// Reusable pyramid component snippet
 </script>
+
+{#snippet pyramid(pyramid: PyramidState)}
+	<FloatingPyramid
+		position={[pyramid.position.x, pyramid.position.y, pyramid.position.z]}
+		rotation={[pyramid.rotation.x, pyramid.rotation.y, pyramid.rotation.z]}
+		color={pyramid.color}
+	/>
+{/snippet}
 
 <svelte:window
 	on:resize={() => {
@@ -29,18 +42,13 @@
 />
 
 <Lights />
-<Camera />
+<Camera {currentView} {pyramidStates} />
 
-{#snippet cube(props: CubeProps)}
-	<T.LineSegments {...props}>
-		<T.BufferGeometry attributes={{ position: edgesGeometry.attributes.position }} />
-		<T.LineBasicMaterial color="#ffffff" linewidth={2} />
-	</T.LineSegments>
+<T.LineSegments position={[0, 0, 0]}>
+	<T.BufferGeometry attributes={{ position: edgesGeometry.attributes.position }} />
+	<T.LineBasicMaterial color="#ffffff" linewidth={2} />
+</T.LineSegments>
 
-	<!-- Add three floating pyramids with different positions, speeds, and phases -->
-	<FloatingPyramid position={[0.2, 0.2, 0]} speed={1} phase={0} />
-	<FloatingPyramid position={[-0.2, -0.2, 0.2]} speed={1.2} phase={2} />
-	<FloatingPyramid position={[0, 0.2, -0.2]} speed={0.8} phase={4} />
-{/snippet}
-
-{@render cube({ position: [0, 0, 0] })}
+{#each pyramids as ship (ship.id)}
+	{@render pyramid(ship)}
+{/each}
