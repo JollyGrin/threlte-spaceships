@@ -7,45 +7,27 @@
 	import { EdgesGeometry, BoxGeometry } from 'three';
 	import { CUBE_SIZE } from '$lib/constants';
 	import type { PyramidState, PyramidStates } from '$lib/types';
-	import { SSEService } from '$lib/sseService';
-	import { onMount } from 'svelte';
+
+	let { pyramidStates = {}, currentView = 'MAIN' } = $props<{
+		pyramidStates: PyramidStates;
+		currentView: string;
+	}>();
 
 	// Box geometry setup
 	let boxGeometry = $state(new BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
 	let edgesGeometry = $state(new EdgesGeometry(boxGeometry));
 
-	// Pyramid states management
-	let pyramidStates = $state<PyramidStates>({});
-	let connectionState = $state<'connecting' | 'connected' | 'disconnected'>('disconnected');
-
-	// Create SSE service
-	const sseService = new SSEService();
-
-	// Function to update pyramid states
-	function updatePyramidStates(newStates: PyramidState[]) {
-		const statesMap: PyramidStates = {};
-		newStates.forEach((state) => {
-			statesMap[state.id] = state;
-		});
-		pyramidStates = statesMap;
-	}
-
-	// Start SSE connection
-	onMount(() => {
-		sseService.onStateUpdate(updatePyramidStates);
-		sseService.onConnectionChange((state) => {
-			connectionState = state;
-		});
-		sseService.connect();
-
-		return () => {
-			sseService.disconnect();
-		};
-	});
-
 	$effect(() => {
 		edgesGeometry = new EdgesGeometry(boxGeometry);
 	});
+
+	type CubeProps = {
+		position: Vector3Tuple;
+	};
+
+	type PyramidProps = {
+		pyramid: PyramidState;
+	};
 </script>
 
 <svelte:window
@@ -54,27 +36,28 @@
 	}}
 />
 
-<Lights />
-<Camera />
+{#snippet cube(props: CubeProps)}
+	<T.LineSegments position={props.position}>
+		<T.BufferGeometry attributes={{ position: edgesGeometry.attributes.position }} />
+		<T.LineBasicMaterial color="#ffffff" linewidth={2} />
+	</T.LineSegments>
+{/snippet}
 
-<!-- Connection status indicator -->
-{#if connectionState !== 'connected'}
-	<div class="connection-status {connectionState}">
-		{connectionState === 'connecting' ? 'Connecting...' : 'Disconnected - Attempting to reconnect...'}
-	</div>
-{/if}
-
-<T.LineSegments position={[0, 0, 0]}>
-	<T.BufferGeometry attributes={{ position: edgesGeometry.attributes.position }} />
-	<T.LineBasicMaterial color="#ffffff" linewidth={2} />
-</T.LineSegments>
-
-{#each Object.values(pyramidStates) as pyramid (pyramid.id)}
+{#snippet floatPyramid(props: PyramidProps)}
 	<FloatingPyramid
-		position={[pyramid.position.x, pyramid.position.y, pyramid.position.z]}
-		rotation={[pyramid.rotation.x, pyramid.rotation.y, pyramid.rotation.z]}
-		color={pyramid.color}
+		position={[props.pyramid.position.x, props.pyramid.position.y, props.pyramid.position.z]}
+		rotation={[props.pyramid.rotation.x, props.pyramid.rotation.y, props.pyramid.rotation.z]}
+		color={props.pyramid.color}
 	/>
+{/snippet}
+
+<Lights />
+<Camera {currentView} />
+
+{@render cube({ position: [0, 0, 0] })}
+
+{#each Object.values(pyramidStates as PyramidState[]) as pyramid (pyramid.id)}
+	{@render floatPyramid({ pyramid })}
 {/each}
 
 <style lang="postcss">

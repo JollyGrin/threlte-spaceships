@@ -31,11 +31,11 @@ const server = Bun.serve({
             const stream = new ReadableStream({
                 start(controller) {
                     // Send initial message
-                    controller.enqueue('data: connected\n\n');
+                    controller.enqueue('data: {"type":"connection","status":"connected"}\n\n');
 
                     // Subscribe to mock data service
                     const unsubscribe = mockDataService.subscribe((states) => {
-                        controller.enqueue(`data: ${JSON.stringify(states)}\n\n`);
+                        controller.enqueue(`data: {"type":"states","data":${JSON.stringify(states)}}\n\n`);
                     });
 
                     // Handle stream closure

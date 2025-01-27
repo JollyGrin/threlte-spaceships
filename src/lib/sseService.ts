@@ -5,6 +5,12 @@ type ConnectionState = 'connecting' | 'connected' | 'disconnected';
 type StateCallback = (states: PyramidState[]) => void;
 type ConnectionCallback = (state: ConnectionState) => void;
 
+type SSEMessage = {
+    type: 'connection' | 'states';
+    status?: string;
+    data?: PyramidState[];
+};
+
 export class SSEService {
     private eventSource: EventSource | null = null;
     private stateCallback: StateCallback | null = null;
@@ -40,14 +46,25 @@ export class SSEService {
             this.eventSource.onopen = () => {
                 console.log('SSE connection established');
                 this.reconnectAttempts = 0;
-                this.updateConnectionState('connected');
             };
 
             this.eventSource.onmessage = (event) => {
                 try {
-                    const data = JSON.parse(event.data);
-                    if (Array.isArray(data)) {
-                        this.stateCallback?.(data);
+                    const message = JSON.parse(event.data) as SSEMessage;
+                    
+                    switch (message.type) {
+                        case 'connection':
+                            if (message.status === 'connected') {
+                                this.updateConnectionState('connected');
+                            }
+                            break;
+                        case 'states':
+                            if (message.data && Array.isArray(message.data)) {
+                                this.stateCallback?.(message.data);
+                            }
+                            break;
+                        default:
+                            console.warn('Unknown message type:', message);
                     }
                 } catch (error) {
                     console.error('Error parsing SSE data:', error);
