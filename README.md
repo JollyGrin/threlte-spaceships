@@ -1,5 +1,11 @@
 # threlte ships
 
+
+
+https://github.com/user-attachments/assets/4267e8aa-a950-4639-bc49-55ab31f59376
+
+
+
 simulation for translating drone data into a 3d space.
 
 will add visuals/ lasers/ powerups to extend the physical drones flying around
